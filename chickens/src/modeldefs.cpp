@@ -127,7 +127,7 @@ public:
       parameter_map eggParameters;
       eggParameters["w"] = 1.0/32.1;
       eggParameters["K"] = 1100;
-      rChain.addTransition(new TransitionCustomFromVoid("E", eggParameters, *eggLayingRate));
+      rChain.addTransition(new TransitionCustomFromVoid(patchName+".E", eggParameters, *eggLayingRate));
       
       std::vector<std::string> infected_states = {"Ch.I", "eG.I", "lG.I", "He.I", "Rs.I"};
       for (int i = 0 ; i < infected_states.size() ; i++)
