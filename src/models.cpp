@@ -18,7 +18,7 @@ private:
   bool shouldInterpolate = true;
 public:
   
-  SerialiserGASReducedScabies(std::vector<double> serialiseTimes) : mSerialiseTimes(serialiseTimes) {}
+  SerialiserR(std::vector<double> serialiseTimes) : mSerialiseTimes(serialiseTimes) {}
   
   void setShouldInterpolate(bool status)
   {
@@ -126,18 +126,22 @@ List chickens_model(List parameters_patch, NumericMatrix betas, double max_time,
     }
     double sigma = as<double>(sublist["sigma"]);
     double gamma = as<double>(sublist["gamma"]);
+    double nEgg = as<double>(sublist["n_egg"]);
+    double q = as<double>(sublist["q"]);
+    double w = as<double>(sublist["w"]);
+    double K = as<double>(sublist["K"]);
     
-    param_map[patchName] = WithinPatchParameters(x0, n, delta, rho, y, x, alpha, beta, sigma, gamma);
+    param_map[patchName] = WithinPatchParameters(x0, n, delta, rho, y, x, alpha, beta, sigma, gamma, nEgg, q, w, K);
     i++;
   }
   
   std::vector<double> serialiser_times(max_time/dt + 1);
   double n = {-1 * dt};
   std::generate(serialiser_times.begin(), serialiser_times.end(), [&n, dt] { return n+=dt;});
-  SerialiserR serialiser(serialiser_times)
+  SerialiserR serialiser(serialiser_times);
     
   MarkovChain chain;
-  chain.setSerialiser(serialiser);
+  chain.setSerialiser(&serialiser);
   chain.setMaxTime(max_time);
   
   ModelChickenFlu model = ModelChickenFlu(patchNames, param_map);

@@ -39,9 +39,9 @@ private:
     if (parameters["Ns"] == 1)
       patchname = "Ns";
     if (parameters["Es"] == 1)
-      patchName == "Es";
+      patchname = "Es";
     if (parameters["Bs"] == 1)
-      patchName == "Bs";
+      patchname = "Bs";
     
     for (typename state_values::iterator it = states.begin() ; it != states.end() ; it++) 
     {
