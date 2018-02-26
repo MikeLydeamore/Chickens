@@ -117,7 +117,7 @@ runChickensModel <- function(parameter_list, betas = matrix(), dt = 1, max_time 
     solver <- -1
   else
     solver <- 1
-  run <- as.data.frame(.chickens_model(parameter_list, betas, dt, solver))
+  run <- as.data.frame(.chickens_model(parameter_list, betas, max_time, dt, solver))
   
   return (run)
 }
