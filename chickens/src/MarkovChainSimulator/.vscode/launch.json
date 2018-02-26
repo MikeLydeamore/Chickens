@@ -1,0 +1,16 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "(lldb) Launch",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceRoot}/MarkovChainSimulator",
+            "args": ["-f sigs1.csv", "-s ./Models/SIGS/states.json", "-t ./Models/SIGS/transitions.json"],
+            "stopAtEntry": false,
+            "cwd": "${workspaceRoot}",
+            "environment": [],
+            "MIMode": "lldb"
+        }
+    ]
+}

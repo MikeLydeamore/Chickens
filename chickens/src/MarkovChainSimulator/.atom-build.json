@@ -1,0 +1,9 @@
+{
+  "name": "Compile",
+  "cmd": "clang++ -o MarkovSimulator.exe *.cpp",
+  "targets": {
+        "Run": {
+          "cmd": "MarkovSimulator.exe"
+        }
+  }
+}
