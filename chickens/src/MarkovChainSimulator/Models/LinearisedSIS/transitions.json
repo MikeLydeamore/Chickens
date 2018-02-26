@@ -1,0 +1,14 @@
+[
+    {
+        "source_state": "S",
+        "destination_state": "I",
+        "parameter": 0.0017,
+        "transition_type": "individual"
+    },
+    {
+        "source_state": "I",
+        "destination_state": "S",
+        "parameter": 0.05,
+        "transition_type": "individual"
+    }
+]
