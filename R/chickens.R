@@ -16,7 +16,7 @@ p_sub <- list("x0"=x0, "n"=n, "delta"=delta, "rho"=rho, "y"=y, "x"=x, "alpha"=al
 p <- list("Sc"=p_sub)
 
 
-runChickensModel <- function(parameter_list, betas = matrix())
+runChickensModel <- function(parameter_list, betas = matrix(), dt = 1, max_time = 1000, solver_type == "stochastic")
 {
   num_patches <- length(parameter_list)
   
@@ -113,8 +113,11 @@ runChickensModel <- function(parameter_list, betas = matrix())
     #Gotta feed it back in because R won't do references :'-(
     parameter_list[[i]] <- params
   }
-  
-  run <- as.data.frame(.chickens_model(parameter_list, betas))
+  if (solver_type == "stochastic")
+    solver <- -1
+  else
+    solver <- 1
+  run <- as.data.frame(.chickens_model(parameter_list, betas, dt, solver))
   
   return (run)
 }
