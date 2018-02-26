@@ -97,7 +97,7 @@ std::map<std::string, double> convertListToMap(List list)
 }
 
 // [[Rcpp::export(.chickens_model)]]
-List chickens_model(List parameters_patch, NumericMatrix betas, double max_time, double dt) {
+List chickens_model(List parameters_patch, NumericMatrix betas, double max_time, double dt, int solver_type) {
   //parameters_patch contains the within-patch parameters
   //betas is the mixing matrix, which is named.
   
@@ -113,9 +113,9 @@ List chickens_model(List parameters_patch, NumericMatrix betas, double max_time,
     stringmap x0 = convertListToMap(sublist["x0"]);
     std::vector<double> n = as<std::vector<double>>(sublist["n"]);
     std::vector<double> delta = as<std::vector<double>>(sublist["delta"]);
-    double rho = as<double> (sublist["rho"]);
-    double y = as<double> (sublist["y"]);
-    double x = as<double> (sublist["x"]);
+    double rho = as<double>(sublist["rho"]);
+    double y = as<double>(sublist["y"]);
+    double x = as<double>(sublist["x"]);
     stringmap alpha = convertListToMap(sublist["alpha"]);
     stringmap beta;
     double j = 0;
@@ -124,8 +124,8 @@ List chickens_model(List parameters_patch, NumericMatrix betas, double max_time,
       beta[p] = betas(i, j);
       j++;
     }
-    double sigma = as<double> (sublist["sigma"]);
-    double gamma = as<double> (sublist["gamma"]);
+    double sigma = as<double>(sublist["sigma"]);
+    double gamma = as<double>(sublist["gamma"]);
     
     param_map[patchName] = WithinPatchParameters(x0, n, delta, rho, y, x, alpha, beta, sigma, gamma);
     i++;
@@ -143,7 +143,7 @@ List chickens_model(List parameters_patch, NumericMatrix betas, double max_time,
   ModelChickenFlu model = ModelChickenFlu(patchNames, param_map);
   model.setupModel(chain);
   
-  chain.solve(-1);
+  chain.solve(solver_type);
   
   return (serialiser.getResults());
 }

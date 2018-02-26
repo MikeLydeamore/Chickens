@@ -18,9 +18,13 @@ public:
   stringmap mBeta;
   double mSigma;
   double mGamma;
+  double mNEgg;
+  double mQ; 
+  double mW;
+  double mK;
   
-  WithinPatchParameters(stringmap x0, std::vector<double> n, std::vector<double> delta, double rho, double y, double x, stringmap alpha, stringmap beta, double sigma, double gamma) :
-    mX0(x0), mN(n), mDelta(delta), mRho(rho), mY(y), mX(x), mAlpha(alpha), mBeta(beta), mSigma(sigma), mGamma(gamma) {}
+  WithinPatchParameters(stringmap x0, std::vector<double> n, std::vector<double> delta, double rho, double y, double x, stringmap alpha, stringmap beta, double sigma, double gamma, double nEgg, double q, double w, double K) :
+    mX0(x0), mN(n), mDelta(delta), mRho(rho), mY(y), mX(x), mAlpha(alpha), mBeta(beta), mSigma(sigma), mGamma(gamma), mNEgg(nEgg), mQ(q), mW(w), mK(K) {}
   
   WithinPatchParameters() {}
 };
@@ -30,8 +34,20 @@ class ModelChickenFlu {
 private:   
   static double eggLayingRate(state_values states, parameter_map parameters) {
     double population_size = 0;
-    for (typename state_values::iterator it = states.begin() ; it != states.end() ; it++) {
-      if (it->first != "E" || it->first != "ES") {
+    //Get patch name:
+    std::string patchname;
+    if (parameters["Ns"] == 1)
+      patchname = "Ns";
+    if (parameters["Es"] == 1)
+      patchName == "Es";
+    if (parameters["Bs"] == 1)
+      patchName == "Bs";
+    
+    for (typename state_values::iterator it = states.begin() ; it != states.end() ; it++) 
+    {
+      std::string current_patch = it->first.substr(0, 2);
+      if (it->first != "E" && current_patch == patchname) 
+      {
         population_size = population_size + it->second;
       }
     }
@@ -39,11 +55,13 @@ private:
     {
       return (0);
     }
-    double n_egg = 8.9;
-    double q = 4;
+    
     double f = ((double) states["He.S"])/population_size;
-    double mu = (f * population_size * n_egg * q) / population_size; // div 365 for years -> days
+    double mu = (f * population_size * parameters["n_egg"] * parameters["q"]) / population_size; // div 365 for years -> days
     double b = log(mu + 1);
+    
+    if (patchname != "Ns")
+      return (b);
     
     double mu_bar = b * population_size * (1-( ((double) population_size)/parameters["K"]));
     if (parameters["ES"]>0) {
@@ -125,8 +143,12 @@ public:
       }
       
       parameter_map eggParameters;
-      eggParameters["w"] = 1.0/32.1;
-      eggParameters["K"] = 1100;
+      eggParameters["w"] = mPatchParams[patchName].mW;
+      eggParameters["K"] = mPatchParams[patchName].mK;
+      eggParameters["n_egg"] = mPatchParams[patchName].mNEgg;
+      eggParameters["q"] = mPatchParams[patchName].mQ;
+      eggParameters[patchName] = 1;
+      
       rChain.addTransition(new TransitionCustomFromVoid(patchName+".E", eggParameters, *eggLayingRate));
       
       std::vector<std::string> infected_states = {"Ch.I", "eG.I", "lG.I", "He.I", "Rs.I"};
