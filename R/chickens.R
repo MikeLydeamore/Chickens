@@ -16,7 +16,7 @@ p_sub <- list("x0"=x0, "n"=n, "delta"=delta, "rho"=rho, "y"=y, "x"=x, "alpha"=al
 p <- list("Sc"=p_sub)
 
 
-runChickensModel <- function(parameter_list, betas = matrix(), dt = 1, max_time = 1000, solver_type == "stochastic")
+runChickensModel <- function(parameter_list, betas = matrix(), dt = 1, max_time = 1000, solver_type = "stochastic")
 {
   num_patches <- length(parameter_list)
   
