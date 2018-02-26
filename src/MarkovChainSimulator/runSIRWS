@@ -1,0 +1,9 @@
+#!/bin/bash
+
+for ((i=1; i<=$1; i++)) do
+  name="./outputs/SIRWS/run-${i}.csv"
+  echo $name
+  ./MarkovChainSimulator -f $name -s ./Models/SIRWS/states.json -t ./Models/SIRWS/transitions.json --serialiser final --maxt 1000 --dt 1 --solver stochastic
+done
+
+#./MarkovChainSimulator -f SIRWSDeterministic.csv -s ./Models/SIRWS/states.json -t ./Models/SIRWS/transitions.json --serialiser points --maxt 1000 --dt 1 --solver deterministic
