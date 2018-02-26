@@ -1,0 +1,3 @@
+useDynLib(chickens, .registration=TRUE)
+exportPattern("^[[:alpha:]]+")
+importFrom(Rcpp, evalCpp)
