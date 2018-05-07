@@ -1,20 +1,26 @@
 #Test chickens model
 
-betas <- matrix(1.5, dimnames=list(c("Sc")))
+betas <- matrix(1.5, dimnames=list(c("Es")))
 #Scavenging:
-x0 <- list("Sc.E"=1000, "Sc.Ch.S"=100)
+x0 <- list("E"=1000, "Ch.S"=100)
 n <- c(10, 10, 10)
-delta <- c(10, 10, 10, 10)
+delta <- c(0,0,0,0)
 rho <- 0.5
 y <- 0.3
 x <- 0.3
-alpha <- list("lG"=4)
+alpha <- list("lG"=0,"He"=0,"Rs"=0)
 sigma <- 1
 gamma <- 3
 
 p_sub <- list("x0"=x0, "n"=n, "delta"=delta, "rho"=rho, "y"=y, "x"=x, "alpha"=alpha, "sigma"=sigma, "gamma"=gamma)
 p <- list("Sc"=p_sub)
 
+ggplotMatrixLinesOnly <- function (df, id.vars, ...) 
+{
+  foo <- melt(df, id.vars)
+  geom_line(data = foo, aes_string(x = id.vars, y = "value", 
+                                   colour = "variable"), ...)
+}
 
 runChickensModel <- function(parameter_list, betas = matrix(), dt = 1, max_time = 1000, solver_type = "stochastic")
 {
@@ -66,7 +72,7 @@ runChickensModel <- function(parameter_list, betas = matrix(), dt = 1, max_time 
     if (params$x < 0 || params$x > 1)
       stop("x must be between 0 and 1 (inclusive)")
     if (!exists("alpha", where = params))
-      params$alpha <- list("lG"=1, "He"=1, "Rs"=3)
+      params$alpha <- list("lG"=0.1, "He"=0.1, "Rs"=0.1)
     if (!exists("sigma", where = params))
       params$sigma <- 1
     if (!exists("gamma", where = params))
@@ -87,13 +93,13 @@ runChickensModel <- function(parameter_list, betas = matrix(), dt = 1, max_time 
     if (!exists("n_egg", where=params))
     {
       if (patch_type == "Sc")
-        params$n_egg <- 1/32.1
+        params$n_egg <- 8.9
       if (patch_type == "Ns")
-        params$n_egg <- 1/2.6
+        params$n_egg <- 10.8
       if (patch_type == "Bs")
-        params$n_egg <- 1/2.7
+        params$n_egg <- 11.3
       if (patch_type == "Es")
-        params$n_egg <- 1/2.6
+        params$n_egg <- 10.2
     }
     
     if (!exists("K", where=params))
@@ -119,5 +125,17 @@ runChickensModel <- function(parameter_list, betas = matrix(), dt = 1, max_time 
     solver <- 1
   run <- as.data.frame(.chickens_model(parameter_list, betas, max_time, dt, solver))
   
-  return (run)
+  return (list("realisation"=run, "parameters"=parameter_list))
+}
+
+getNumberOfChickens <- function(state)
+{
+  cols <- colnames(state)
+  idx <- sapply(strsplit(cols, "\\."), length) == 3
+  return (sum(state[idx]))
+}
+
+getNumberOfChickensAtAllTimes <- function(r)
+{
+  sapply(1:nrow(r$realisation), function(i) {getNumberOfChickens(r$realisation[i,])})
 }

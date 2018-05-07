@@ -197,7 +197,8 @@ void MarkovChain::solveGillespie()
             if (rates[i] < 0.0 || isnan(rates[i]))
             {
                 std::cout << "Transition from " << transitions[i]->getSourceState() << " to " << transitions[i]->getDestinationState() << " has rate " << rates[i] << std::endl;
-                exit(-1);
+                std::cout << "States have values " << states[transitions[i]->getSourceState()] << " and " << states[transitions[i]->getDestinationState()] << std::endl;
+                return;
             }
             assert(rates[i] >= 0);
         }
@@ -434,7 +435,7 @@ void MarkovChain::addState(std::string state_name, double initial_value)
 
 void MarkovChain::addTransition(Transition *transition)
 {
-    if (debug)
+    if (true)
     {
         double two_decimals = round(100 / transition->getSingleParameter()) / 100;
         std::cout << ("Adding transition from " + transition->getSourceState() + " to " + transition->getDestinationState() + " at rate " + std::to_string(transition->getSingleParameter()) + " (1/") << std::setprecision(2) << std::fixed << two_decimals << ")" << std::endl;

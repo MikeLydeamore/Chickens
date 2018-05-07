@@ -146,12 +146,11 @@ public:
   }
 };
 
-
-class TransitionCustomFromVoid : public Transition
+class TransitionCustom : public Transition
 {
 public:
-  TransitionCustomFromVoid(std::string destination_state, parameter_map parameters, double (*getActualRate)(state_values pStates, parameter_map parameters))
-    : Transition("Void", destination_state, parameters, getActualRate)
+  TransitionCustom(std::string source_state, std::string destination_state, parameter_map parameters, double (*getActualRate)(state_values pStates, parameter_map parameters))
+    : Transition(source_state, destination_state, parameters, getActualRate)
     {}
 
   virtual double getRate(state_values states)
@@ -161,7 +160,34 @@ public:
 
   virtual void do_transition(double t, state_values &rStates)
   {
+    rStates[this->mSource_state] -= 1;
     rStates[this->mDestination_state] += 1;
+  }
+};
+
+class TransitionCustomFromVoid : public TransitionCustom
+{
+public:
+  TransitionCustomFromVoid(std::string destination_state, parameter_map parameters, double (*getActualRate)(state_values pStates, parameter_map parameters))
+    : TransitionCustom("Void", destination_state, parameters, getActualRate)
+    {}
+
+  virtual void do_transition(double t, state_values &rStates)
+  {
+    rStates[this->mDestination_state] += 1;
+  }
+};
+
+class TransitionCustomToVoid : public TransitionCustom
+{
+public:
+  TransitionCustomToVoid(std::string source_state, parameter_map parameters, double (*getActualRate)(state_values pStates, parameter_map parameters))
+    : TransitionCustom(source_state, "Void", parameters, getActualRate)
+    {}
+
+  virtual void do_transition(double t, state_values &rStates)
+  {
+    rStates[this->mSource_state] -= 1;
   }
 };
 

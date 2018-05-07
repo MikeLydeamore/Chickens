@@ -1,6 +1,7 @@
 #include <math.h>
 #include <map>
 #include <vector>
+#include <Rcpp.h>
 #include "MarkovChainSimulator/MarkovChain/MarkovChain.hpp"
 
 typedef std::map<std::string, double> stringmap;
@@ -11,7 +12,6 @@ public:
   stringmap mX0;
   std::vector<double> mN;
   std::vector<double> mDelta;
-  double mRho;
   double mY;
   double mX;
   stringmap mAlpha;
@@ -23,8 +23,8 @@ public:
   double mW;
   double mK;
   
-  WithinPatchParameters(stringmap x0, std::vector<double> n, std::vector<double> delta, double rho, double y, double x, stringmap alpha, stringmap beta, double sigma, double gamma, double nEgg, double q, double w, double K) :
-    mX0(x0), mN(n), mDelta(delta), mRho(rho), mY(y), mX(x), mAlpha(alpha), mBeta(beta), mSigma(sigma), mGamma(gamma), mNEgg(nEgg), mQ(q), mW(w), mK(K) {}
+  WithinPatchParameters(stringmap x0, std::vector<double> n, std::vector<double> delta, double y, double x, stringmap alpha, stringmap beta, double sigma, double gamma, double nEgg, double q, double w, double K) :
+    mX0(x0), mN(n), mDelta(delta), mY(y), mX(x), mAlpha(alpha), mBeta(beta), mSigma(sigma), mGamma(gamma), mNEgg(nEgg), mQ(q), mW(w), mK(K) {}
   
   WithinPatchParameters() {}
 };
@@ -36,6 +36,8 @@ private:
     double population_size = 0;
     //Get patch name:
     std::string patchname;
+    if (parameters["Sc"] == 1)
+      patchname = "Sc";
     if (parameters["Ns"] == 1)
       patchname = "Ns";
     if (parameters["Es"] == 1)
@@ -43,10 +45,14 @@ private:
     if (parameters["Bs"] == 1)
       patchname = "Bs";
     
-    for (typename state_values::iterator it = states.begin() ; it != states.end() ; it++) 
+    for (state_values::iterator it = states.begin() ; it != states.end() ; it++) 
     {
-      std::string current_patch = it->first.substr(0, 2);
-      if (it->first != "E" && current_patch == patchname) 
+      std::string s = it->first;
+      std::string delimeter = ".";
+      std::string current_patch = s.substr(0, s.find(delimeter));
+      s.erase(0, s.find(delimeter) + delimeter.length());
+      std::string state = s.substr(0, s.find(delimeter));
+      if (state != "E" && current_patch == patchname) 
       {
         population_size = population_size + it->second;
       }
@@ -56,22 +62,94 @@ private:
       return (0);
     }
     
-    double f = ((double) states["He.S"])/population_size;
-    double mu = (f * population_size * parameters["n_egg"] * parameters["q"]) / population_size; // div 365 for years -> days
+    double f = ((double) states[patchname+".He.S"])/population_size;
+    double mu = (f * parameters["n_egg"] * parameters["q"]); // div 365 for years -> days
     double b = log(mu + 1);
     
-    if (patchname != "Ns")
+    if (patchname != "Sc")
       return (b);
     
     double mu_bar = b * population_size * (1-( ((double) population_size)/parameters["K"]));
+    if (mu_bar < 0)
+      mu_bar = 0;
     if (parameters["ES"]>0) {
       return ( parameters["w"] * mu_bar);
     }
     else {
       return (mu_bar);
     }
+  }
+  
+  static double eggHatchingRate(state_values states, parameter_map parameters) {
+    //Calculate n_1*E and total sum of death rates.
     
-    //if nonscavenging, return b*N;
+    std::string patchname;
+    if (parameters["Sc"] == 1)
+      patchname = "Sc";
+    if (parameters["Ns"] == 1)
+      patchname = "Ns";
+    if (parameters["Es"] == 1)
+      patchname = "Es";
+    if (parameters["Bs"] == 1)
+      patchname = "Bs";
+    
+    double population_size = 0;
+    for (state_values::iterator it = states.begin() ; it != states.end() ; it++) 
+    {
+      std::string s = it->first;
+      std::string delimeter = ".";
+      std::string current_patch = s.substr(0, s.find(delimeter));
+      s.erase(0, s.find(delimeter) + delimeter.length());
+      std::string state = s.substr(0, s.find(delimeter));
+      if (state != "E" && current_patch == patchname) 
+      {
+        population_size = population_size + it->second;
+      }
+    }
+    
+    double n1E = parameters["n1"]*states[patchname+".E"];
+    double totaldeaths = 0;
+    
+    std::vector<std::string> disease_states = {"S","E","I"};
+    for (std::string disease_state : disease_states)
+    {
+      totaldeaths += states[patchname+".Ch."+disease_state] * parameters["delta1"];
+      totaldeaths += states[patchname+".eG."+disease_state] * parameters["delta2"];
+      totaldeaths += states[patchname+".lG."+disease_state] * parameters["alphaLG"];
+      totaldeaths += states[patchname+".lG."+disease_state] * (1-parameters["alphaLG"])*parameters["delta3"];
+      totaldeaths += states[patchname+".He."+disease_state] * parameters["alphaHe"];
+      totaldeaths += states[patchname+".He."+disease_state] * (1-parameters["alphaHe"])*parameters["delta3"];
+      totaldeaths += states[patchname+".Rs."+disease_state] * parameters["alphaRs"];
+      totaldeaths += states[patchname+".Rs."+disease_state] * (1-parameters["alphaRs"])*parameters["delta4"];
+    }
+    
+    double alpha = 0;
+    double rho = 0;
+    if (population_size + n1E - totaldeaths <= parameters["K"])
+    {
+      alpha = 1;
+      rho = parameters["K"] - population_size - n1E + totaldeaths;
+    }
+    else
+    {
+      rho = 0;
+      alpha = (parameters["K"] - population_size + totaldeaths)/n1E;
+      if (alpha > 1)
+        alpha = 1;
+      if (alpha < 0)
+        alpha = 0;
+    }
+    
+    if (parameters["returnrho"])
+    {
+      return (rho); 
+    }
+    
+    if (parameters["returnhatching"])
+      return (alpha*n1E);
+    
+    if (parameters["returnsold"])
+      return ((1-alpha)*n1E);
   }
   
   std::map<std::string, WithinPatchParameters> mPatchParams; 
@@ -99,10 +177,11 @@ public:
     for (std::string patchName : mPatchNames)
     {
       //States!
-      rChain.addState(patchName+".E", mPatchParams[patchName].mX0[patchName+".E"]);
+      rChain.addState(patchName+".E", mPatchParams[patchName].mX0["E"]);
       
       
       std::vector<std::string> within_patch_population_states;
+      double initial_size = 0;
       
       for (std::string demographic_state : demographic_states) 
       {
@@ -110,16 +189,37 @@ public:
         {
           std::string state_name = patchName + "." + demographic_state + "." + disease_state;
           
-          rChain.addState(state_name, mPatchParams[patchName].mX0[state_name]);
+          rChain.addState(state_name, mPatchParams[patchName].mX0[demographic_state+"."+disease_state]);
           
           population_states.push_back(state_name);
           within_patch_population_states.push_back(state_name);
+          initial_size += mPatchParams[patchName].mX0[demographic_state+"."+disease_state];
         }
       }
       
       //Aging transitions
-      rChain.addTransition(new TransitionIndividual(patchName+".E", patchName+".Ch.S", mPatchParams[patchName].mN[0]));
-      rChain.addTransition(new TransitionIndividualToVoid("E", mPatchParams[patchName].mDelta[0]));
+      parameter_map hatchingParameters;
+      hatchingParameters[patchName] = 1;
+      hatchingParameters["n1"]=mPatchParams[patchName].mN[1];
+      hatchingParameters["delta1"]=mPatchParams[patchName].mDelta[1];
+      hatchingParameters["delta2"]=mPatchParams[patchName].mDelta[2];
+      hatchingParameters["delta3"]=mPatchParams[patchName].mDelta[3];
+      hatchingParameters["delta4"]=mPatchParams[patchName].mDelta[4];
+      hatchingParameters["alphaLG"]=mPatchParams[patchName].mAlpha["lG"];
+      hatchingParameters["alphaHe"]=mPatchParams[patchName].mAlpha["He"];
+      hatchingParameters["alphaRs"]=mPatchParams[patchName].mAlpha["Rs"];
+      hatchingParameters["returnhatching"]=1;
+      hatchingParameters["K"]=initial_size;
+      
+      rChain.addTransition(new TransitionCustom(patchName+".E", patchName+".Ch.S", hatchingParameters, *eggHatchingRate));
+      
+      hatchingParameters["returnsold"]=1; hatchingParameters["returnhatching"]=0;
+      rChain.addTransition(new TransitionCustomToVoid(patchName+".E", hatchingParameters, *eggHatchingRate));
+      
+      hatchingParameters["returnrho"]=1; hatchingParameters["returnsold"]=0;
+      rChain.addTransition(new TransitionCustomFromVoid(patchName+".Ch.S", hatchingParameters, *eggHatchingRate));
+      
+      //Need (1-y) into Hens
       
       for (std::string disease_state : disease_states) 
       {
@@ -133,13 +233,12 @@ public:
         rChain.addTransition(new TransitionIndividualToVoid(patchName+".Ch."+disease_state, mPatchParams[patchName].mDelta[1]));
         rChain.addTransition(new TransitionIndividualToVoid(patchName+".eG."+disease_state, mPatchParams[patchName].mDelta[2]));
         rChain.addTransition(new TransitionIndividualToVoid(patchName+".lG."+disease_state, mPatchParams[patchName].mAlpha["lG"]));
-        rChain.addTransition(new TransitionIndividualToVoid(patchName+".lG."+disease_state, (1-mPatchParams[patchName].mAlpha["lG"]*mPatchParams[patchName].mDelta[3])));
+        rChain.addTransition(new TransitionIndividualToVoid(patchName+".lG."+disease_state, (1-mPatchParams[patchName].mAlpha["lG"])*mPatchParams[patchName].mDelta[3]));
         rChain.addTransition(new TransitionIndividualToVoid(patchName+".He."+disease_state, mPatchParams[patchName].mAlpha["He"]));
-        rChain.addTransition(new TransitionIndividualToVoid(patchName+".He."+disease_state, (1-mPatchParams[patchName].mAlpha["He"]*mPatchParams[patchName].mDelta[3])));
+        rChain.addTransition(new TransitionIndividualToVoid(patchName+".He."+disease_state, (1-mPatchParams[patchName].mAlpha["He"])*mPatchParams[patchName].mDelta[3]));
         rChain.addTransition(new TransitionIndividualToVoid(patchName+".Rs."+disease_state, mPatchParams[patchName].mAlpha["Rs"]));
         rChain.addTransition(new TransitionIndividualToVoid(patchName+".Rs."+disease_state, (1-mPatchParams[patchName].mAlpha["Rs"])*mPatchParams[patchName].mDelta[4]));
         
-        //Import rates
       }
       
       parameter_map eggParameters;

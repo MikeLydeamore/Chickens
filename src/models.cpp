@@ -113,7 +113,6 @@ List chickens_model(List parameters_patch, NumericMatrix betas, double max_time,
     stringmap x0 = convertListToMap(sublist["x0"]);
     std::vector<double> n = as<std::vector<double>>(sublist["n"]);
     std::vector<double> delta = as<std::vector<double>>(sublist["delta"]);
-    double rho = as<double>(sublist["rho"]);
     double y = as<double>(sublist["y"]);
     double x = as<double>(sublist["x"]);
     stringmap alpha = convertListToMap(sublist["alpha"]);
@@ -131,7 +130,7 @@ List chickens_model(List parameters_patch, NumericMatrix betas, double max_time,
     double w = as<double>(sublist["w"]);
     double K = as<double>(sublist["K"]);
     
-    param_map[patchName] = WithinPatchParameters(x0, n, delta, rho, y, x, alpha, beta, sigma, gamma, nEgg, q, w, K);
+    param_map[patchName] = WithinPatchParameters(x0, n, delta, y, x, alpha, beta, sigma, gamma, nEgg, q, w, K);
     i++;
   }
   
@@ -139,6 +138,8 @@ List chickens_model(List parameters_patch, NumericMatrix betas, double max_time,
   double n = {-1 * dt};
   std::generate(serialiser_times.begin(), serialiser_times.end(), [&n, dt] { return n+=dt;});
   SerialiserR serialiser(serialiser_times);
+  if (solver_type == -1)
+    serialiser.setShouldInterpolate(false);
     
   MarkovChain chain;
   chain.setSerialiser(&serialiser);
@@ -146,7 +147,6 @@ List chickens_model(List parameters_patch, NumericMatrix betas, double max_time,
   
   ModelChickenFlu model = ModelChickenFlu(patchNames, param_map);
   model.setupModel(chain);
-  
   chain.solve(solver_type);
   
   return (serialiser.getResults());
