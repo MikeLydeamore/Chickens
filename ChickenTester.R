@@ -1,0 +1,6 @@
+library(devtools)
+library(Rcpp)
+setwd("~/cloudstor/Chickens/")
+Sys.setenv("PKG_CXXFLAGS"="-std=c++11")
+document()
+library(chickens)
