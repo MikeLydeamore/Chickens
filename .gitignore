@@ -16,3 +16,5 @@ src/MarkovChainSimulator/\.vscode/launch\.json
 src/MarkovChainSimulator/\.vscode/settings\.json
 
 *.o
+
+\.vscode/settings\.json
