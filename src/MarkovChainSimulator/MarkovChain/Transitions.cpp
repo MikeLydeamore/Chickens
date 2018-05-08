@@ -1,9 +1,6 @@
 #include <iostream>
 #include <utility>
 #include "StateValues.h"
-#include <json.hpp>
-
-using json = nlohmann::json;
 
 class Transition {
 

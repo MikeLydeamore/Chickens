@@ -1,9 +1,0 @@
-#!/bin/bash
-
-for ((i=1; i<=$1; i++)) do
-  name="./outputs/SIR/run-${i}.csv"
-  echo $name
-  ./MarkovChainSimulator -f $name -s ./Models/SIR/states.json -t ./Models/SIR/transitions.json --serialiser points --maxt 1000 --dt 1 --solver stochastic
-done
-
-#./MarkovChainSimulator -f SIRDeterministic.csv -s ./Models/SIR/states.json -t ./Models/SIR/transitions.json --serialiser points --maxt 1000 --dt 1 --solver deterministic

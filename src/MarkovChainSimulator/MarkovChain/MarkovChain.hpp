@@ -5,7 +5,7 @@
 #include <utility>
 #include <vector>
 #include <assert.h>
-#include <math.h>
+#include <cmath>
 #include <random>
 #include <numeric>
 #include <ctime>

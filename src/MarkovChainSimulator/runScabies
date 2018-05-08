@@ -1,9 +1,0 @@
-#!/bin/bash
-
-for ((i=1; i<=$1; i++)) do
-  name="./outputs/Scabies/run-${i}.csv"
-  echo $name
-  ./MarkovChainSimulator -f $name -s ./Models/Scabies/states.json -t ./Models/Scabies/transitions.json --serialiser points --maxt 1000 --dt 1 --solver stochastic
-done
-
-#./MarkovChainSimulator -f ScabiesDeterministic.csv -s ./Models/Scabies/states.json -t ./Models/Scabies/transitions.json --serialiser points --maxt 1000 --dt 1 --solver deterministic
