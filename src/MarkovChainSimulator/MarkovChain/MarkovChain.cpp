@@ -11,7 +11,8 @@ void State::addToKey(std::string key, double a)
 
 State &State::operator+=(const State &p)
 {
-    for (auto &p : p.mMap)
+    auto map = p.mMap;
+    for (auto &p : map)
         mMap[p.first] += p.second;
     return *this;
 }
