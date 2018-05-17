@@ -1,20 +1,3 @@
-#Test chickens model
-
-betas <- matrix(1.5, dimnames=list(c("Es")))
-#Scavenging:
-x0 <- list("E"=1000, "Ch.S"=100)
-n <- c(10, 10, 10)
-delta <- c(0,0,0,0)
-rho <- 0.5
-y <- 0.3
-x <- 0.3
-alpha <- list("lG"=0,"He"=0,"Rs"=0)
-sigma <- 1
-gamma <- 3
-
-p_sub <- list("x0"=x0, "n"=n, "delta"=delta, "rho"=rho, "y"=y, "x"=x, "alpha"=alpha, "sigma"=sigma, "gamma"=gamma)
-p <- list("Sc"=p_sub)
-
 ggplotMatrixLinesOnly <- function (df, id.vars, ...) 
 {
   foo <- melt(df, id.vars)
@@ -22,6 +5,43 @@ ggplotMatrixLinesOnly <- function (df, id.vars, ...)
                                    colour = "variable"), ...)
 }
 
+#' Run Chicken Model
+#' 
+#' Runs a single realisation of the chickens model
+#' 
+#' @param parameter_list A list of parameters for this realisation. Needs the following structure:
+#'   \itemize{
+#'   \item{\code{patchname}: One of "Es","Ns","Bs" or "Sc"}
+#'     \itemize{
+#'        \item{\code{x0}: Initial condition}
+#'        \item{\code{delta}: Numeric vector of length 5}
+#'        \item{\code{y}: Numeric in [0, 1]}
+#'        \item{\code{x}: Numeric in [0, 1]}
+#'        \item{\code{alpha}: List containing 3 elements, "lG","He" and "Rs"}
+#'        \item{\code{sigma}:}
+#'        \item{\code{gamma}:}
+#'        \item{\code{w}:}
+#'        \item{\code{n_egg}:}
+#'        \item{\code{K}: Carrying capacity (Sc system only)}
+#'        \item{\code{q}:}
+#'     }
+#'   }
+# 
+#'   Repeat for each possible patch.
+#'
+#' @param betas Matrix of within and between patch transmission (row names are required)
+#' @param dt Time spacing of outputs (NOT solving points)
+#' @param max_time Maximum time for simulation
+#' @param solver_type Either "stochastic" or "deterministic"
+#' 
+#' @examples 
+#' betas <- matrix(1.5, dimnames=list(c("Es")))
+#  x0 <- list("E"=100, "Ch.S"=50, "He.S"=50, "He.I"=10)
+#' p_sub <- list("x0"=x0)
+#' p <- list("Es"=p_sub)
+#' df <- runChickensModel(parameter_list = p, betas=betas)
+#' 
+#' @return A list containing two elements: \code{realisation}, contains the realisation and \code{parameters} contains the parameters
 runChickensModel <- function(parameter_list, betas = matrix(), dt = 1, max_time = 1000, solver_type = "stochastic")
 {
   num_patches <- length(parameter_list)
@@ -128,6 +148,10 @@ runChickensModel <- function(parameter_list, betas = matrix(), dt = 1, max_time 
   return (list("realisation"=run, "parameters"=parameter_list))
 }
 
+#' Get number of chickens at given time
+#' 
+#' @param state State vector
+#' @return Number of chickens (total) in the given state
 getNumberOfChickens <- function(state)
 {
   cols <- colnames(state)
@@ -135,7 +159,15 @@ getNumberOfChickens <- function(state)
   return (sum(state[idx]))
 }
 
-getNumberOfChickensAtAllTimes <- function(r)
+#' Get the number of chickens at all times
+#' 
+#' @param realisation Realisation from the Chickens model
+#' @return Vector consisting of the number of chickens at each time
+#' 
+#' @examples 
+#' df <- runChickensModel(parameter_list = p, betas=betas)
+#' df$realisation$total_chickens <- getNumberOfChickensAtAllTimes(df$realisation)
+getNumberOfChickensAtAllTimes <- function(realisation)
 {
-  sapply(1:nrow(r$realisation), function(i) {getNumberOfChickens(r$realisation[i,])})
+  sapply(1:nrow(realisation), function(i) {getNumberOfChickens(realisation[i,])})
 }
