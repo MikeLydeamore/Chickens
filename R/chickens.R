@@ -36,7 +36,7 @@ ggplotMatrixLinesOnly <- function (df, id.vars, ...)
 #' 
 #' @examples 
 #' betas <- matrix(1.5, dimnames=list(c("Es")))
-#  x0 <- list("E"=100, "Ch.S"=50, "He.S"=50, "He.I"=10)
+#' x0 <- list("E"=100, "Ch.S"=50, "He.S"=50, "He.I"=10)
 #' p_sub <- list("x0"=x0)
 #' p <- list("Es"=p_sub)
 #' df <- runChickensModel(parameter_list = p, betas=betas)
