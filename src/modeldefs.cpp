@@ -218,6 +218,9 @@ public:
       
       rChain.addTransition(new TransitionCustom(patchName+".E", patchName+".Ch.S", hatchingParameters, *eggHatchingRate));
       
+      hatchingParameters["destState"]="He.S";
+      rChain.addTransition(new TransitionCustom(patchName+".E", patchName+".He.S", hatchingParameters, *eggHatchingRate));
+      
       hatchingParameters["returnsold"]=1; hatchingParameters["returnhatching"]=0;
       rChain.addTransition(new TransitionCustomToVoid(patchName+".E", hatchingParameters, *eggHatchingRate));
       
