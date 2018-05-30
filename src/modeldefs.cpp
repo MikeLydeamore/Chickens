@@ -142,7 +142,10 @@ private:
     
     if (parameters["returnrho"])
     {
-      return (rho); 
+      if (parameters["destState"] == "Ch.S")
+        return (parameters["y"]*rho); 
+      else
+        return ((1-parameters["y"])*rho);
     }
     
     if (parameters["returnhatching"])
@@ -185,7 +188,7 @@ public:
       
       for (std::string demographic_state : demographic_states) 
       {
-        for (std::string disease_state : disease_states) 
+        for (std::string disease_state : disease_states)    
         {
           std::string state_name = patchName + "." + demographic_state + "." + disease_state;
           
@@ -210,6 +213,8 @@ public:
       hatchingParameters["alphaRs"]=mPatchParams[patchName].mAlpha["Rs"];
       hatchingParameters["returnhatching"]=1;
       hatchingParameters["K"]=initial_size;
+      hatchingParameters["y"]=mPatchParams[patchName].mY;
+      hatchingParameters["destState"]="Ch.S";
       
       rChain.addTransition(new TransitionCustom(patchName+".E", patchName+".Ch.S", hatchingParameters, *eggHatchingRate));
       
