@@ -272,7 +272,7 @@ public:
       for (std::string demographic_state : demographic_states)
       {
         //Within patch:
-        rChain.addTransition(new TransitionMassActionByPopulation(patchName +"." + demographic_state+".S", patchName + "." + demographic_state+".E", mPatchParams[patchName].mBeta[patchName], within_patch_population_states, infected_states));
+        rChain.addTransition(new TransitionMassActionByPopulation(patchName +"." + demographic_state+".S", patchName + "." + demographic_state+".E", mPatchParams[patchName].mBeta[patchName], within_patch_population_states, infected_states).addCounter("infection"));
         rChain.addTransition(new TransitionIndividual(patchName + "." + demographic_state+".E", patchName + "." + demographic_state+".I", mPatchParams[patchName].mSigma));
         rChain.addTransition(new TransitionIndividualToVoid(patchName + "." + demographic_state+".I", mPatchParams[patchName].mGamma));
       }
@@ -287,7 +287,7 @@ public:
         {
           if (other_patch != patchName)
           {
-            rChain.addTransition(new TransitionMassActionByPopulation(patchName+"."+demographic_state+".S", patchName+"."+demographic_state+".E", mPatchParams[patchName].mBeta[other_patch], population_states, population_infectious));
+            rChain.addTransition(new TransitionMassActionByPopulation(patchName+"."+demographic_state+".S", patchName+"."+demographic_state+".E", mPatchParams[patchName].mBeta[other_patch], population_states, population_infectious).addCounter("infection"));
           }
         }
       }
