@@ -217,15 +217,20 @@ public:
       hatchingParameters["destState"]="Ch.S";
       
       rChain.addTransition(new TransitionCustom(patchName+".E", patchName+".Ch.S", hatchingParameters, *eggHatchingRate));
-      
-      hatchingParameters["destState"]="He.S";
-      rChain.addTransition(new TransitionCustom(patchName+".E", patchName+".He.S", hatchingParameters, *eggHatchingRate));
+
       
       hatchingParameters["returnsold"]=1; hatchingParameters["returnhatching"]=0;
       rChain.addTransition(new TransitionCustomToVoid(patchName+".E", hatchingParameters, *eggHatchingRate));
       
       hatchingParameters["returnrho"]=1; hatchingParameters["returnsold"]=0;
-      rChain.addTransition(new TransitionCustomFromVoid(patchName+".Ch.S", hatchingParameters, *eggHatchingRate));
+      Transition import_chicks = TransitionCustomFromVoid(patchName+".Ch.S", hatchingParameters, *eggHatchingRate);
+      import_chicks.addCounter("imported");
+      rChain.addTransition(*import_chicks);
+
+      hatchingParameters["destState"]="He.S";
+      Transition import_hens = new TransitionCustomFromVoid(patchName+".He.S", hatchingParameters, *eggHatchingRate);
+      import_hens.addCounter("imported");
+      rChain.addTransition(import_hens);
       
       //Need (1-y) into Hens
       
@@ -273,7 +278,7 @@ public:
       }
     }
 
-    //Betwen patches:
+    //Between patches:
     for (std::string patchName : mPatchNames)
     {
       for (std::string demographic_state : demographic_states)
