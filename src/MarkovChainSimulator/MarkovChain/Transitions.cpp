@@ -15,7 +15,7 @@ protected:
 
   int mTransition_type = 0;
 
-  virtual void incrementCounters(state_values, state_values &rStates)
+  virtual void incrementCounters(state_values &rStates)
   {
     for (std::string counter : mCounters)
     {
