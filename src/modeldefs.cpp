@@ -164,6 +164,7 @@ public:
   mPatchParams(patchParams), mPatchNames(patchNames) {}
   
   void setupModel(MarkovChain &rChain) {
+    
     const std::vector<std::string> disease_states = {"S", "E", "I"};
     const std::vector<std::string> demographic_states = {"Ch","eG","lG","He","Rs"};
     
@@ -292,7 +293,6 @@ public:
             TransitionMassActionByPopulation infection_transition = TransitionMassActionByPopulation(patchName+"."+demographic_state+".S", patchName+"."+demographic_state+".E", mPatchParams[patchName].mBeta[other_patch], population_states, population_infectious);
             infection_transition.addCounter(patchName+".infection");
             rChain.addTransition(&infection_transition);
-            std::cout << "Adding counter" << std::endl;
           }
         }
       }

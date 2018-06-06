@@ -17,10 +17,14 @@ protected:
 
   virtual void incrementCounters(state_values &rStates)
   {
-    for (std::string counter : mCounters)
+    if (mCounters.size() > 0)
+    {
+      for (std::string counter : this->mCounters)
     {
       rStates[counter] += 1;
     }
+    }
+    
   }
 
 public:
