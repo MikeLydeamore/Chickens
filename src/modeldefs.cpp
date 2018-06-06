@@ -142,7 +142,7 @@ private:
     
     if (parameters["returnrho"])
     {
-      if (parameters["destState"] == "Ch.S")
+      if (parameters["Ch.S"] == 1)
         return (parameters["y"]*rho); 
       else
         return ((1-parameters["y"])*rho);
@@ -214,7 +214,7 @@ public:
       hatchingParameters["returnhatching"]=1;
       hatchingParameters["K"]=initial_size;
       hatchingParameters["y"]=mPatchParams[patchName].mY;
-      hatchingParameters["destState"]="Ch.S";
+      hatchingParameters["Ch.S"]=1;
       
       rChain.addTransition(new TransitionCustom(patchName+".E", patchName+".Ch.S", hatchingParameters, *eggHatchingRate));
 
@@ -223,17 +223,17 @@ public:
       rChain.addTransition(new TransitionCustomToVoid(patchName+".E", hatchingParameters, *eggHatchingRate));
       
       hatchingParameters["returnrho"]=1; hatchingParameters["returnsold"]=0;
-      Transition import_chicks = TransitionCustomFromVoid(patchName+".Ch.S", hatchingParameters, *eggHatchingRate);
-      import_chicks.addCounter("imported");
-      rChain.addTransition(*import_chicks);
+      TransitionCustomFromVoid import_chicks = TransitionCustomFromVoid(patchName+".Ch.S", hatchingParameters, *eggHatchingRate);
+      import_chicks.addCounter(patchName+".importedChicks");
+      rChain.addTransition(&import_chicks);
 
-      hatchingParameters["destState"]="He.S";
-      Transition import_hens = new TransitionCustomFromVoid(patchName+".He.S", hatchingParameters, *eggHatchingRate);
-      import_hens.addCounter("imported");
-      rChain.addTransition(import_hens);
+      hatchingParameters["Ch.S"]=0;
+      TransitionCustomFromVoid import_hens = TransitionCustomFromVoid(patchName+".He.S", hatchingParameters, *eggHatchingRate);
+      import_hens.addCounter(patchName+".importedHens");
+      rChain.addTransition(&import_hens);
+      
       
       //Need (1-y) into Hens
-      
       for (std::string disease_state : disease_states) 
       {
         //Ageing
@@ -272,7 +272,9 @@ public:
       for (std::string demographic_state : demographic_states)
       {
         //Within patch:
-        rChain.addTransition(new TransitionMassActionByPopulation(patchName +"." + demographic_state+".S", patchName + "." + demographic_state+".E", mPatchParams[patchName].mBeta[patchName], within_patch_population_states, infected_states).addCounter("infection"));
+        TransitionMassActionByPopulation infection_transition = TransitionMassActionByPopulation(patchName +"." + demographic_state+".S", patchName + "." + demographic_state+".E", mPatchParams[patchName].mBeta[patchName], within_patch_population_states, infected_states);
+        infection_transition.addCounter(patchName+".infection");
+        rChain.addTransition(&infection_transition);
         rChain.addTransition(new TransitionIndividual(patchName + "." + demographic_state+".E", patchName + "." + demographic_state+".I", mPatchParams[patchName].mSigma));
         rChain.addTransition(new TransitionIndividualToVoid(patchName + "." + demographic_state+".I", mPatchParams[patchName].mGamma));
       }
@@ -287,7 +289,10 @@ public:
         {
           if (other_patch != patchName)
           {
-            rChain.addTransition(new TransitionMassActionByPopulation(patchName+"."+demographic_state+".S", patchName+"."+demographic_state+".E", mPatchParams[patchName].mBeta[other_patch], population_states, population_infectious).addCounter("infection"));
+            TransitionMassActionByPopulation infection_transition = TransitionMassActionByPopulation(patchName+"."+demographic_state+".S", patchName+"."+demographic_state+".E", mPatchParams[patchName].mBeta[other_patch], population_states, population_infectious);
+            infection_transition.addCounter(patchName+".infection");
+            rChain.addTransition(&infection_transition);
+            std::cout << "Adding counter" << std::endl;
           }
         }
       }
