@@ -203,9 +203,7 @@ class TransitionCustomFromVoid : public TransitionCustom
 public:
   TransitionCustomFromVoid(std::string destination_state, parameter_map parameters, double (*getActualRate)(state_values pStates, parameter_map parameters))
     : TransitionCustom("Void", destination_state, parameters, getActualRate)
-    {
-      std::cout << destination_state << std::endl;
-    }
+    {}
 
   virtual void do_transition(double t, state_values &rStates)
   {
