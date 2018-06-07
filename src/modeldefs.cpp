@@ -2,6 +2,7 @@
 #include <map>
 #include <vector>
 #include <Rcpp.h>
+#include <algorithm>
 #include "MarkovChainSimulator/MarkovChain/MarkovChain.hpp"
 
 typedef std::map<std::string, double> stringmap;
@@ -52,7 +53,8 @@ private:
       std::string current_patch = s.substr(0, s.find(delimeter));
       s.erase(0, s.find(delimeter) + delimeter.length());
       std::string state = s.substr(0, s.find(delimeter));
-      if (state != "E" && current_patch == patchname) 
+      size_t n = std::count(s.begin(), s.end(), '.');
+      if (n > 0 && current_patch == patchname) 
       {
         population_size = population_size + it->second;
       }
@@ -82,7 +84,6 @@ private:
   
   static double eggHatchingRate(state_values states, parameter_map parameters) {
     //Calculate n_1*E and total sum of death rates.
-    
     std::string patchname;
     if (parameters["Sc"] == 1)
       patchname = "Sc";
@@ -101,7 +102,8 @@ private:
       std::string current_patch = s.substr(0, s.find(delimeter));
       s.erase(0, s.find(delimeter) + delimeter.length());
       std::string state = s.substr(0, s.find(delimeter));
-      if (state != "E" && current_patch == patchname) 
+      size_t n = std::count(s.begin(), s.end(), '.');
+      if (n > 0 && current_patch == patchname) 
       {
         population_size = population_size + it->second;
       }
@@ -136,7 +138,7 @@ private:
       alpha = (parameters["K"] - population_size + totaldeaths)/n1E;
       if (alpha > 1)
         alpha = 1;
-      if (alpha < 0)
+      if (alpha < 0 || std::isinf(alpha))
         alpha = 0;
     }
     
@@ -224,14 +226,14 @@ public:
       rChain.addTransition(new TransitionCustomToVoid(patchName+".E", hatchingParameters, *eggHatchingRate));
       
       hatchingParameters["returnrho"]=1; hatchingParameters["returnsold"]=0;
-      TransitionCustomFromVoid import_chicks = TransitionCustomFromVoid(patchName+".Ch.S", hatchingParameters, *eggHatchingRate);
-      import_chicks.addCounter(patchName+".importedChicks");
-      rChain.addTransition(&import_chicks);
+      TransitionCustomFromVoid* import_chicks = new TransitionCustomFromVoid(patchName+".Ch.S", hatchingParameters, *eggHatchingRate);
+      import_chicks->addCounter(patchName+".importedChicks");
+      rChain.addTransition(import_chicks);
 
       hatchingParameters["Ch.S"]=0;
-      TransitionCustomFromVoid import_hens = TransitionCustomFromVoid(patchName+".He.S", hatchingParameters, *eggHatchingRate);
-      import_hens.addCounter(patchName+".importedHens");
-      rChain.addTransition(&import_hens);
+      TransitionCustomFromVoid* import_hens = new TransitionCustomFromVoid(patchName+".He.S", hatchingParameters, *eggHatchingRate);
+      import_hens->addCounter(patchName+".importedHens");
+      rChain.addTransition(import_hens);
       
       
       //Need (1-y) into Hens
@@ -273,9 +275,9 @@ public:
       for (std::string demographic_state : demographic_states)
       {
         //Within patch:
-        TransitionMassActionByPopulation infection_transition = TransitionMassActionByPopulation(patchName +"." + demographic_state+".S", patchName + "." + demographic_state+".E", mPatchParams[patchName].mBeta[patchName], within_patch_population_states, infected_states);
-        infection_transition.addCounter(patchName+".infection");
-        rChain.addTransition(&infection_transition);
+        TransitionMassActionByPopulation* infection_transition = new TransitionMassActionByPopulation(patchName +"." + demographic_state+".S", patchName + "." + demographic_state+".E", mPatchParams[patchName].mBeta[patchName], within_patch_population_states, infected_states);
+        infection_transition->addCounter(patchName+".infection");
+        rChain.addTransition(infection_transition);
         rChain.addTransition(new TransitionIndividual(patchName + "." + demographic_state+".E", patchName + "." + demographic_state+".I", mPatchParams[patchName].mSigma));
         rChain.addTransition(new TransitionIndividualToVoid(patchName + "." + demographic_state+".I", mPatchParams[patchName].mGamma));
       }
@@ -290,9 +292,9 @@ public:
         {
           if (other_patch != patchName)
           {
-            TransitionMassActionByPopulation infection_transition = TransitionMassActionByPopulation(patchName+"."+demographic_state+".S", patchName+"."+demographic_state+".E", mPatchParams[patchName].mBeta[other_patch], population_states, population_infectious);
-            infection_transition.addCounter(patchName+".infection");
-            rChain.addTransition(&infection_transition);
+            TransitionMassActionByPopulation* infection_transition = new TransitionMassActionByPopulation(patchName+"."+demographic_state+".S", patchName+"."+demographic_state+".E", mPatchParams[patchName].mBeta[other_patch], population_states, population_infectious);
+            infection_transition->addCounter(patchName+".infection");
+            rChain.addTransition(infection_transition);
           }
         }
       }
