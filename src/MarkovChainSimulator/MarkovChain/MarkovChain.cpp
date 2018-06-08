@@ -472,3 +472,11 @@ void MarkovChain::setSeed(double newSeed)
 {
     seed = newSeed;
 }
+
+void MarkovChain::cleanup()
+{
+    for (Transition* pTransition : transitions)
+    {
+        delete pTransition;
+    }
+}

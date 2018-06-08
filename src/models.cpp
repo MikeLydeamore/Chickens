@@ -149,5 +149,6 @@ List chickens_model(List parameters_patch, NumericMatrix betas, double max_time,
   model.setupModel(chain);
   chain.solve(solver_type);
   
+  chain.cleanup();
   return (serialiser.getResults());
 }
