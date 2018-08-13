@@ -211,7 +211,7 @@ public:
 
       //New egg laying rate from discussion on 10/08/18
       std::vector<std::string> governing_states = {patchName+".He.S", patchName+".He.E"};
-      rChain.addTransition(new TransitionIndividualFromVoid(patchName+".E", mPatchParams[patchName].mNEgg * mPatchParams[patchnames].mBr / 365.0, governing_states));
+      rChain.addTransition(new TransitionIndividualFromVoid(patchName+".E", mPatchParams[patchName].mNEgg * mPatchParams[patchName].mBr / 365.0, governing_states));
       
       std::vector<std::string> infected_states = {"Ch.I", "eG.I", "lG.I", "He.I", "Rs.I"};
       for (int i = 0 ; i < infected_states.size() ; i++)
