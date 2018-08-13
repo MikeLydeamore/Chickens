@@ -180,7 +180,7 @@ public:
 class TransitionIndividualFromVoid : public Transition
 {
 public:
-  TransitionIndividualToVoid(std::string destination_state, double parameter, std::vector<std::string> governing_states)
+  TransitionIndividualFromVoid(std::string destination_state, double parameter, std::vector<std::string> governing_states)
     : Transition("Void", destination_state, parameter, governing_states)
     {}
   
