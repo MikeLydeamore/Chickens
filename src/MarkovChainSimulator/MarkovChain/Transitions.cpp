@@ -177,6 +177,31 @@ public:
   }
 };
 
+class TransitionIndividualFromVoid : public Transition
+{
+public:
+  TransitionIndividualToVoid(std::string destination_state, double parameter, std::vector<std::string> governing_states)
+    : Transition("Void", destination_state, parameter, governing_states)
+    {}
+  
+  virtual double getRate(state_values states)
+  {
+    double mass = 0;
+    for (std::vector<std::string>::iterator it = this->mGoverning_states.begin() ; it != this->mGoverning_states.end() ; it++)
+    {
+      mass += states[*it];
+    }
+    return (this->mParameters["parameter"] * mass);
+  }
+
+  virtual void do_transition(double t, state_values &rStates)
+  {
+    rStates[this->mDestination_state] += 1;
+
+    incrementCounters(rStates);
+  }
+};
+
 class TransitionCustom : public Transition
 {
 public:

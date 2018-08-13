@@ -97,7 +97,7 @@ std::map<std::string, double> convertListToMap(List list)
 }
 
 // [[Rcpp::export(.chickens_model)]]
-List chickens_model(List parameters_patch, NumericMatrix betas, double max_time, double dt, int solver_type) {
+List chickens_model(List parameters_patch, NumericMatrix betas, double max_time, double dt, int solver_type, int seed) {
   //parameters_patch contains the within-patch parameters
   //betas is the mixing matrix, which is named.
   
@@ -129,8 +129,9 @@ List chickens_model(List parameters_patch, NumericMatrix betas, double max_time,
     double q = as<double>(sublist["q"]);
     double w = as<double>(sublist["w"]);
     double K = as<double>(sublist["K"]);
+    double br = as<double>(sublist["br"]);
     
-    param_map[patchName] = WithinPatchParameters(x0, n, delta, y, x, alpha, beta, sigma, gamma, nEgg, q, w, K);
+    param_map[patchName] = WithinPatchParameters(x0, n, delta, y, x, alpha, beta, sigma, gamma, nEgg, q, w, K, br);
     i++;
   }
   
@@ -142,6 +143,8 @@ List chickens_model(List parameters_patch, NumericMatrix betas, double max_time,
     serialiser.setShouldInterpolate(false);
     
   MarkovChain chain;
+  if (seed != -1)
+    chain.setSeed(seed);
   chain.setSerialiser(&serialiser);
   chain.setMaxTime(max_time);
   

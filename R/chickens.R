@@ -42,7 +42,7 @@ ggplotMatrixLinesOnly <- function (df, id.vars, ...)
 #' df <- runChickensModel(parameter_list = p, betas=betas)
 #' 
 #' @return A list containing two elements: \code{realisation}, contains the realisation and \code{parameters} contains the parameters
-runChickensModel <- function(parameter_list, betas = matrix(), dt = 1, max_time = 1000, solver_type = "stochastic")
+runChickensModel <- function(parameter_list, betas = matrix(), dt = 1, max_time = 1000, solver_type = "stochastic", seed = -1)
 {
   num_patches <- length(parameter_list)
   
@@ -136,6 +136,17 @@ runChickensModel <- function(parameter_list, betas = matrix(), dt = 1, max_time 
       if (patch_type == "Es")
         params$q <- 2
     }
+
+    if (!exists("br", where=params))
+    {
+      if (patch_type == "Ns")
+        params$br <- 1
+      if (patch_type == "Bs")
+        params$br <- 1
+      if (patch_type == "Es")
+        params$br <- 0.1
+    }
+    
     #Gotta feed it back in because R won't do references :'-(
     parameter_list[[i]] <- params
   }
@@ -143,9 +154,9 @@ runChickensModel <- function(parameter_list, betas = matrix(), dt = 1, max_time 
     solver <- -1
   else
     solver <- 1
-  run <- as.data.frame(.chickens_model(parameter_list, betas, max_time, dt, solver))
+  run <- as.data.frame(.chickens_model(parameter_list, betas, max_time, dt, solver, seed))
   
-  return (list("realisation"=run, "parameters"=parameter_list))
+  return (list("realisation"=run, "parameters"=parameter_list, "seed"=seed))
 }
 
 #' Get number of chickens at given time

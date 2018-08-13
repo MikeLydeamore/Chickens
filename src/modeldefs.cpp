@@ -23,9 +23,10 @@ public:
   double mQ; 
   double mW;
   double mK;
+  double mBr;
   
-  WithinPatchParameters(stringmap x0, std::vector<double> n, std::vector<double> delta, double y, double x, stringmap alpha, stringmap beta, double sigma, double gamma, double nEgg, double q, double w, double K) :
-    mX0(x0), mN(n), mDelta(delta), mY(y), mX(x), mAlpha(alpha), mBeta(beta), mSigma(sigma), mGamma(gamma), mNEgg(nEgg), mQ(q), mW(w), mK(K) {}
+  WithinPatchParameters(stringmap x0, std::vector<double> n, std::vector<double> delta, double y, double x, stringmap alpha, stringmap beta, double sigma, double gamma, double nEgg, double q, double w, double K, double br) :
+    mX0(x0), mN(n), mDelta(delta), mY(y), mX(x), mAlpha(alpha), mBeta(beta), mSigma(sigma), mGamma(gamma), mNEgg(nEgg), mQ(q), mW(w), mK(K), mBr(br) {}
   
   WithinPatchParameters() {}
 };
@@ -33,55 +34,6 @@ public:
 class ModelChickenFlu {
   
 private:   
-  static double eggLayingRate(state_values states, parameter_map parameters) {
-    double population_size = 0;
-    //Get patch name:
-    std::string patchname;
-    if (parameters["Sc"] == 1)
-      patchname = "Sc";
-    if (parameters["Ns"] == 1)
-      patchname = "Ns";
-    if (parameters["Es"] == 1)
-      patchname = "Es";
-    if (parameters["Bs"] == 1)
-      patchname = "Bs";
-    
-    for (state_values::iterator it = states.begin() ; it != states.end() ; it++) 
-    {
-      std::string s = it->first;
-      std::string delimeter = ".";
-      std::string current_patch = s.substr(0, s.find(delimeter));
-      s.erase(0, s.find(delimeter) + delimeter.length());
-      std::string state = s.substr(0, s.find(delimeter));
-      size_t n = std::count(s.begin(), s.end(), '.');
-      if (n > 0 && current_patch == patchname) 
-      {
-        population_size = population_size + it->second;
-      }
-    }
-    if (population_size == 0)
-    {
-      return (0);
-    }
-    
-    double f = ((double) states[patchname+".He.S"])/population_size;
-    double mu = (f * parameters["n_egg"] * parameters["q"]); // div 365 for years -> days
-    double b = log(mu + 1);
-    
-    if (patchname != "Sc")
-      return (b);
-    
-    double mu_bar = b * population_size * (1-( ((double) population_size)/parameters["K"]));
-    if (mu_bar < 0)
-      mu_bar = 0;
-    if (parameters["ES"]>0) {
-      return ( parameters["w"] * mu_bar);
-    }
-    else {
-      return (mu_bar);
-    }
-  }
-  
   static double eggHatchingRate(state_values states, parameter_map parameters) {
     //Calculate n_1*E and total sum of death rates.
     std::string patchname;
@@ -265,6 +217,10 @@ public:
       eggParameters[patchName] = 1;
       
       rChain.addTransition(new TransitionCustomFromVoid(patchName+".E", eggParameters, *eggLayingRate));
+
+      //New egg laying rate from discussion on 10/08/18
+      std::vector<std::string> governing_states = {patchName+".He.S", patchName+".He.E"};
+      rChain.addTransition(new TransitionIndividualFromVoid(patchName+".E", mPatchParams[patchName].mNEgg * mPatchParams[patchnames].mBr / 365.0, governing_states));
       
       std::vector<std::string> infected_states = {"Ch.I", "eG.I", "lG.I", "He.I", "Rs.I"};
       for (int i = 0 ; i < infected_states.size() ; i++)
@@ -276,9 +232,10 @@ public:
       {
         //Within patch:
         TransitionMassActionByPopulation* infection_transition = new TransitionMassActionByPopulation(patchName +"." + demographic_state+".S", patchName + "." + demographic_state+".E", mPatchParams[patchName].mBeta[patchName], within_patch_population_states, infected_states);
-        infection_transition->addCounter(patchName+".infection");
         rChain.addTransition(infection_transition);
-        rChain.addTransition(new TransitionIndividual(patchName + "." + demographic_state+".E", patchName + "." + demographic_state+".I", mPatchParams[patchName].mSigma));
+        TransitionIndividual* incidence_transition = new TransitionIndividual(patchName + "." + demographic_state+".E", patchName + "." + demographic_state+".I", mPatchParams[patchName].mSigma);
+        incidence_transition->addCounter(patchName+".infection");
+        rChain.addTransition(incidence_transition);
         rChain.addTransition(new TransitionIndividualToVoid(patchName + "." + demographic_state+".I", mPatchParams[patchName].mGamma));
       }
     }
@@ -292,8 +249,23 @@ public:
         {
           if (other_patch != patchName)
           {
-            TransitionMassActionByPopulation* infection_transition = new TransitionMassActionByPopulation(patchName+"."+demographic_state+".S", patchName+"."+demographic_state+".E", mPatchParams[patchName].mBeta[other_patch], population_states, population_infectious);
-            infection_transition->addCounter(patchName+".infection");
+            std::vector<std::string> infected_states = {"Ch.I", "eG.I", "lG.I", "He.I", "Rs.I"};
+            for (std::string& s : infected_states)
+              s = other_patch + "." + s;
+            
+            const std::vector<std::string> disease_states = {"S", "E", "I"};
+            const std::vector<std::string> demographic_states = {"Ch","eG","lG","He","Rs"};
+            std::vector<std::string> denominator_states;
+
+            for (std::string demo_state : demographic_states)
+            {
+              for (std::string dis_state : disease_states)
+              {
+                denominator_states.push_back(other_patch+"."+demo_state+"."+dis_state);
+              }
+            }
+
+            TransitionMassActionByPopulation* infection_transition = new TransitionMassActionByPopulation(patchName+"."+demographic_state+".S", patchName+"."+demographic_state+".E", mPatchParams[patchName].mBeta[other_patch], denominator_states, infected_states);
             rChain.addTransition(infection_transition);
           }
         }
