@@ -208,15 +208,6 @@ public:
         rChain.addTransition(new TransitionIndividualToVoid(patchName+".Rs."+disease_state, (1-mPatchParams[patchName].mAlpha["Rs"])*mPatchParams[patchName].mDelta[4]));
         
       }
-      
-      parameter_map eggParameters;
-      eggParameters["w"] = mPatchParams[patchName].mW;
-      eggParameters["K"] = mPatchParams[patchName].mK;
-      eggParameters["n_egg"] = mPatchParams[patchName].mNEgg;
-      eggParameters["q"] = mPatchParams[patchName].mQ;
-      eggParameters[patchName] = 1;
-      
-      rChain.addTransition(new TransitionCustomFromVoid(patchName+".E", eggParameters, *eggLayingRate));
 
       //New egg laying rate from discussion on 10/08/18
       std::vector<std::string> governing_states = {patchName+".He.S", patchName+".He.E"};
