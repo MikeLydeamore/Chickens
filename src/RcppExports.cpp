@@ -6,8 +6,8 @@
 using namespace Rcpp;
 
 // chickens_model
-List chickens_model(List parameters_patch, NumericMatrix betas, double max_time, double dt, int solver_type);
-RcppExport SEXP _chickens_chickens_model(SEXP parameters_patchSEXP, SEXP betasSEXP, SEXP max_timeSEXP, SEXP dtSEXP, SEXP solver_typeSEXP) {
+List chickens_model(List parameters_patch, NumericMatrix betas, double max_time, double dt, int solver_type, int seed);
+RcppExport SEXP _chickens_chickens_model(SEXP parameters_patchSEXP, SEXP betasSEXP, SEXP max_timeSEXP, SEXP dtSEXP, SEXP solver_typeSEXP, SEXP seedSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -16,13 +16,14 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type max_time(max_timeSEXP);
     Rcpp::traits::input_parameter< double >::type dt(dtSEXP);
     Rcpp::traits::input_parameter< int >::type solver_type(solver_typeSEXP);
-    rcpp_result_gen = Rcpp::wrap(chickens_model(parameters_patch, betas, max_time, dt, solver_type));
+    Rcpp::traits::input_parameter< int >::type seed(seedSEXP);
+    rcpp_result_gen = Rcpp::wrap(chickens_model(parameters_patch, betas, max_time, dt, solver_type, seed));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_chickens_chickens_model", (DL_FUNC) &_chickens_chickens_model, 5},
+    {"_chickens_chickens_model", (DL_FUNC) &_chickens_chickens_model, 6},
     {NULL, NULL, 0}
 };
 

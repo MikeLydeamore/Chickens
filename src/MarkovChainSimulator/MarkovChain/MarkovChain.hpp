@@ -84,5 +84,6 @@ public:
     void setMaxTime(double newMaxTime);
     void solve(int solver_type);
     void setSeed(double seed);
+    void cleanup();
 };
 #endif

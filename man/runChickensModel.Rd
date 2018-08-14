@@ -5,7 +5,7 @@
 \title{Run Chicken Model}
 \usage{
 runChickensModel(parameter_list, betas = matrix(), dt = 1,
-  max_time = 1000, solver_type = "stochastic")
+  max_time = 1000, solver_type = "stochastic", seed = -1)
 }
 \arguments{
 \item{parameter_list}{A list of parameters for this realisation. Needs the following structure:

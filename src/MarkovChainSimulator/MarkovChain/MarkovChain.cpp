@@ -182,7 +182,6 @@ void MarkovChain::solveGillespie()
 
     while (t < T_MAX && !ended_infinite)
     {
-
         int actual_size = 0;
         for (typename state_values::iterator it = states.begin(); it != states.end(); it++)
         {
@@ -443,6 +442,13 @@ void MarkovChain::addTransition(Transition *transition)
     }
 
     transitions.push_back(transition);
+    if (transition->getNumCounters() > 0)
+    {
+        for (std::string counter : transition->getCounters())
+        {
+            states[counter] =  0;
+        }
+    }
 }
 
 void MarkovChain::setMaxTime(double newMaxTime)
@@ -465,4 +471,12 @@ void MarkovChain::solve(int solver_type)
 void MarkovChain::setSeed(double newSeed)
 {
     seed = newSeed;
+}
+
+void MarkovChain::cleanup()
+{
+    for (Transition* pTransition : transitions)
+    {
+        delete pTransition;
+    }
 }

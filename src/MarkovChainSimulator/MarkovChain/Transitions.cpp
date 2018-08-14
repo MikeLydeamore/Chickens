@@ -9,10 +9,22 @@ protected:
   std::string mDestination_state;
   std::vector<std::string> mGoverning_states;
   parameter_map mParameters;
+  std::vector<std::string> mCounters;
 
   double (*mpGetActualRate)(state_values pStates, parameter_map parameters);
 
   int mTransition_type = 0;
+
+  virtual void incrementCounters(state_values &rStates)
+  {
+    if (mCounters.size() > 0)
+    {
+      for (std::string counter : this->mCounters)
+      {
+        rStates[counter] += 1;
+      }
+    }
+  }
 
 public:
   
@@ -82,6 +94,22 @@ public:
     mGoverning_states = governing_states;
   }
 
+  virtual void addCounter(std::string counter)
+  {
+    mCounters.push_back(counter);
+  }
+
+  virtual std::vector<std::string> getCounters()
+  {
+    return (mCounters);
+  }
+
+  virtual int getNumCounters()
+  {
+    return (mCounters.size());
+  }
+  
+
 };
 
 
@@ -101,6 +129,8 @@ public:
   virtual void do_transition(double t, state_values &rStates) {
     rStates[this->mSource_state] -= 1;
     rStates[this->mDestination_state] += 1;
+
+    incrementCounters(rStates);
   }
 };
 
@@ -126,6 +156,8 @@ public:
   {
     rStates[this->mSource_state] -= 1;
     rStates[this->mDestination_state] += 1;
+
+    incrementCounters(rStates);
   }
 };
 
@@ -140,6 +172,33 @@ public:
   virtual void do_transition(double t, state_values &rStates)
   {
     rStates[this->mSource_state] -= 1;
+
+    incrementCounters(rStates);
+  }
+};
+
+class TransitionIndividualFromVoid : public Transition
+{
+public:
+  TransitionIndividualFromVoid(std::string destination_state, double parameter, std::vector<std::string> governing_states)
+    : Transition("Void", destination_state, parameter, governing_states)
+    {}
+  
+  virtual double getRate(state_values states)
+  {
+    double mass = 0;
+    for (std::vector<std::string>::iterator it = this->mGoverning_states.begin() ; it != this->mGoverning_states.end() ; it++)
+    {
+      mass += states[*it];
+    }
+    return (this->mParameters["parameter"] * mass);
+  }
+
+  virtual void do_transition(double t, state_values &rStates)
+  {
+    rStates[this->mDestination_state] += 1;
+
+    incrementCounters(rStates);
   }
 };
 
@@ -159,6 +218,8 @@ public:
   {
     rStates[this->mSource_state] -= 1;
     rStates[this->mDestination_state] += 1;
+
+    incrementCounters(rStates);
   }
 };
 
@@ -172,6 +233,8 @@ public:
   virtual void do_transition(double t, state_values &rStates)
   {
     rStates[this->mDestination_state] += 1;
+
+    incrementCounters(rStates);
   }
 };
 
@@ -185,6 +248,8 @@ public:
   virtual void do_transition(double t, state_values &rStates)
   {
     rStates[this->mSource_state] -= 1;
+
+    incrementCounters(rStates);
   }
 };
 
