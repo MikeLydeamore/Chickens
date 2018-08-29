@@ -257,7 +257,7 @@ public:
             }
 
             TransitionMassActionByPopulation* infection_transition = new TransitionMassActionByPopulation(patchName+"."+demographic_state+".S", patchName+"."+demographic_state+".E", mPatchParams[patchName].mBeta[other_patch], denominator_states, infected_states);
-            infection_transition->addCounter(patchName+".infection")
+            infection_transition->addCounter(patchName+".infection");
             rChain.addTransition(infection_transition);
           }
         }
