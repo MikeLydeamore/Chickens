@@ -223,9 +223,9 @@ public:
       {
         //Within patch:
         TransitionMassActionByPopulation* infection_transition = new TransitionMassActionByPopulation(patchName +"." + demographic_state+".S", patchName + "." + demographic_state+".E", mPatchParams[patchName].mBeta[patchName], within_patch_population_states, infected_states);
-        infection_transition->addCounter(patchName+".infection");
         rChain.addTransition(infection_transition);
         TransitionIndividual* incidence_transition = new TransitionIndividual(patchName + "." + demographic_state+".E", patchName + "." + demographic_state+".I", mPatchParams[patchName].mSigma);
+        incidence_transition->addCounter(patchName+".infection");
         rChain.addTransition(incidence_transition);
         rChain.addTransition(new TransitionIndividualToVoid(patchName + "." + demographic_state+".I", mPatchParams[patchName].mGamma));
       }
@@ -257,7 +257,6 @@ public:
             }
 
             TransitionMassActionByPopulation* infection_transition = new TransitionMassActionByPopulation(patchName+"."+demographic_state+".S", patchName+"."+demographic_state+".E", mPatchParams[patchName].mBeta[other_patch], denominator_states, infected_states);
-            infection_transition->addCounter(patchName+".infection");
             rChain.addTransition(infection_transition);
           }
         }
